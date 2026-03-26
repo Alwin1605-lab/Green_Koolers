@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist
+dist-ssr
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Junk artifacts
+-p/
+done/
+echo/
+mkdir/
+nul
+
+# Sensitive docs
+Backend/EMPLOYEE_CREDENTIALS.md
