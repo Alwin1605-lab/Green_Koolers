@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { setToken } from '../utils/auth.js'
+import { API_URL } from '../utils/constants.js'
 
 function Signup() {
   const navigate = useNavigate()
@@ -19,7 +20,7 @@ function Signup() {
     setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:4000/api/auth/signup', {
+      const response = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)

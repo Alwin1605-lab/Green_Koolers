@@ -1,5 +1,6 @@
 // API Base URL — uses VITE_API_URL env var in production, localhost in dev
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+export const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/+$/, '')
+export const API_URL = `${BASE_URL}/api`
 
 // Service categories with full details
 export const SERVICE_CATEGORIES = [

@@ -22,13 +22,32 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(",").map((u) => u.trim())
   : [];
 
+const allowedOriginRegexes = process.env.FRONTEND_URL_REGEX
+  ? process.env.FRONTEND_URL_REGEX.split(",")
+      .map((pattern) => pattern.trim())
+      .filter(Boolean)
+      .flatMap((pattern) => {
+        try {
+          return [new RegExp(pattern)];
+        } catch {
+          console.warn(`[cors] Ignoring invalid FRONTEND_URL_REGEX pattern: ${pattern}`);
+          return [];
+        }
+      })
+  : [];
+
+const isAllowedOrigin = (origin) => {
+  if (allowedOrigins.includes(origin)) return true;
+  return allowedOriginRegexes.some((regex) => regex.test(origin));
+};
+
 app.use(
   cors(
     allowedOrigins.length > 0
       ? {
           origin(origin, cb) {
             // Allow requests with no origin (mobile apps, curl, server-to-server)
-            if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+            if (!origin || isAllowedOrigin(origin)) return cb(null, true);
             return cb(new Error("Not allowed by CORS"));
           },
           credentials: true
