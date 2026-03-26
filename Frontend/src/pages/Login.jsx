@@ -13,31 +13,32 @@ function Login() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    setError('')
-    setLoading(true)
+ const handleSubmit = async (event) => {
+  event.preventDefault()
+  setError('')
+  setLoading(true)
 
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      })
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    })
 
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed')
-      }
+    const data = await response.json()
 
-      setToken(data.token)
-      navigate('/app')
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed')
     }
+
+    setToken(data.token)
+    navigate('/app')
+  } catch (err) {
+    setError(err.message)
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="auth-layout">
