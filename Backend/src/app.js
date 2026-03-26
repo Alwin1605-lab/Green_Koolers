@@ -20,17 +20,32 @@ import { notFound, errorHandler } from "./middleware/errorHandler.js";
 const app = express();
 
 // ✅ CORS configuration
-const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(",").map((u) => u.trim())
+const normalizeOrigin = (value) => value.trim().replace(/\/+$/, "").toLowerCase();
+
+const explicitAllowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",")
+      .map((u) => u.trim())
+      .filter(Boolean)
+      .map(normalizeOrigin)
   : [];
 
-const allowedOriginRegexes = process.env.FRONTEND_URL_REGEX
+const builtInAllowedOrigins = [
+  "https://green-koolers.vercel.app",
+  "https://greenkoolers.vercel.app"
+].map(normalizeOrigin);
+
+const builtInAllowedOriginRegexes = [
+  /^https:\/\/green-koolers(-[a-z0-9-]+)?\.vercel\.app$/i,
+  /^https:\/\/greenkoolers(-[a-z0-9-]+)?\.vercel\.app$/i
+];
+
+const envAllowedOriginRegexes = process.env.FRONTEND_URL_REGEX
   ? process.env.FRONTEND_URL_REGEX.split(",")
       .map((pattern) => pattern.trim())
       .filter(Boolean)
       .flatMap((pattern) => {
         try {
-          return [new RegExp(pattern)];
+          return [new RegExp(pattern, "i")];
         } catch {
           console.warn(`[cors] Ignoring invalid FRONTEND_URL_REGEX pattern: ${pattern}`);
           return [];
@@ -38,24 +53,25 @@ const allowedOriginRegexes = process.env.FRONTEND_URL_REGEX
       })
   : [];
 
+const allowedOrigins = [...new Set([...explicitAllowedOrigins, ...builtInAllowedOrigins])];
+const allowedOriginRegexes = [...builtInAllowedOriginRegexes, ...envAllowedOriginRegexes];
+
 const isAllowedOrigin = (origin) => {
-  if (allowedOrigins.includes(origin)) return true;
-  return allowedOriginRegexes.some((regex) => regex.test(origin));
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (allowedOrigins.includes(normalizedOrigin)) return true;
+  return allowedOriginRegexes.some((regex) => regex.test(normalizedOrigin));
 };
 
 app.use(
-  cors(
-    allowedOrigins.length > 0
-      ? {
-          origin(origin, cb) {
-            // Allow requests with no origin (mobile apps, curl, server-to-server)
-            if (!origin || isAllowedOrigin(origin)) return cb(null, true);
-            return cb(new Error("Not allowed by CORS"));
-          },
-          credentials: true,
-        }
-      : {} // Open CORS for local development when FRONTEND_URL is not set
-  )
+  cors({
+    origin(origin, cb) {
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin || isAllowedOrigin(origin)) return cb(null, true);
+      console.warn(`[cors] Blocked origin: ${origin}`);
+      return cb(null, false);
+    },
+    credentials: true
+  })
 );
 
 // ✅ Middleware
